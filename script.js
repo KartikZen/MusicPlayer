@@ -136,7 +136,7 @@
                     name: "Pehle Bhi Main",
                     artist: "Vishal Mishra",
                     src: "audio/Vishal/Pehle Bhi Main.mp3",
-                    img: "img/Jina.webp"
+                    img: "img/Kaise-Hua.jpg"
                 },
                 {
                     name: "Aaj Bhi",
@@ -154,7 +154,7 @@
                     name: "Jeena Haraam",
                     artist: "Vishal Mishra",
                     src: "audio/Vishal/Jeena Haraam.mp3",
-                    img: "img/Jina.webp"
+                    img: "img/Kaise-Hua.jpg"
                 },
                 {
                     name: "Deewaniyat",
