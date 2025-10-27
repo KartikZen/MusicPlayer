@@ -1,4 +1,5 @@
 
+<<<<<<< HEAD
 // Playlists by singer
 const playlists = {
     arijit: [
@@ -7,6 +8,66 @@ const playlists = {
             artist: "Arijit Singh",
             src: "audio/Kesariya.mp3",
             img: "img/kesariya.jpg",
+=======
+            ],
+            jubin: [
+                {
+                    name: "Lut Gaye",
+                    artist: "Jubin Nautiyal",
+                    src: "audio/Jubin/Lut Gaye.mp3",
+                    img: "img/lut-gaye.jpg"
+                },
+                {
+                    name: "Tujhe Kitna Chahein Aur",
+                    artist: "Jubin Nautiyal",
+                    src: "audio/Jubin/Tujhe Kitna Chahein Aur.mp3",
+                    img: "img/tujhe-kitna-chahein-aur.jpg"
+                },
+                {
+                    name: "Raataan Lambiyan",
+                    artist: "Jubin Nautiyal",
+                    src: "audio/Jubin/Raataan Lambiyan.mp3",
+                    img: "img/raataan-lambiyan.jpg"
+                }
+            ],
+            vishal: [
+                {
+                    name: "Kaise Hua",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Kaise Hua.mp3",
+                    img: "img/Kaise-Hua.jpg"
+                },
+                {
+                    name: "Pehle Bhi Main",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Pehle Bhi Main.mp3",
+                    img: "img/Kaise-Hua.jpg"
+                },
+                {
+                    name: "Aaj Bhi",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Aaj Bhi.mp3",
+                    img: "img/aaj-bhi.jpg"
+                },
+                {
+                    name: "Manjha",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Manjha.mp3",
+                    img: "img/manjha.webp"
+                },
+                {
+                    name: "Jeena Haraam",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Jeena Haraam.mp3",
+                    img: "img/Kaise-Hua.jpg"
+                },
+                {
+                    name: "Deewaniyat",
+                    artist: "Vishal Mishra",
+                    src: "audio/Vishal/Deewaniyat.mp3",
+                    img: "img/deewaniyat.webp"
+                }
+>>>>>>> e5c14b5d2644e9ff03cd9cceacb947c5ccf27723
 
             lyrics: [
                 { time: 0, text: "Kesariya tera ishq hai piya" },
