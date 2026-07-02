@@ -263,6 +263,34 @@ const singerSelect = document.getElementById('singer-select');
 const playlistSearchInput = document.getElementById('playlist-search-input');
 const playlistStats = document.getElementById('playlist-stats');
 
+
+// Toast Elements
+const toastContainer = document.getElementById('toast-container');
+
+function showToast(message) {
+    if(!toastContainer) return;
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.textContent = message;
+    toastContainer.appendChild(toast);
+    setTimeout(() => {
+        if(toast.parentElement) {
+            toast.remove();
+        }
+    }, 3000);
+}
+
+// iTunes Elements
+const itunesBtn = document.getElementById('itunes-search-btn');
+const itunesModal = document.getElementById('itunes-modal');
+const closeItunes = document.getElementById('close-itunes');
+const itunesSearchInput = document.getElementById('itunes-search-input');
+const itunesList = document.getElementById('itunes-list');
+
+// Local Upload Elements
+const uploadLocalBtn = document.getElementById('upload-local-btn');
+const localAudioUpload = document.getElementById('local-audio-upload');
+
 // Custom Playlist Elements
 const customPlaylistBtn = document.getElementById('custom-playlist-btn');
 const customPlaylistModal = document.getElementById('custom-playlist-modal');
@@ -312,7 +340,10 @@ function loadSong(index) {
     songArtist.textContent = song.artist;
     songImg.src = song.img;
     currentSong = index;
-    progressBar.value = 0;
+    
+progressBar.value = 0;
+    progressBar.style.setProperty('--progress', `0%`);
+
     currentTimeEl.textContent = "0:00";
     durationEl.textContent = "0:00";
 
@@ -360,8 +391,11 @@ audio.addEventListener('timeupdate', () => {
     currentTimeEl.textContent = formatTime(audio.currentTime);
     durationEl.textContent = formatTime(audio.duration);
     if (audio.duration) {
+        
         const progress = (audio.currentTime / audio.duration) * 100;
         progressBar.value = progress;
+        progressBar.style.setProperty('--progress', `${progress}%`);
+
     }
 
     // Update lyrics
@@ -432,7 +466,10 @@ progressBar.addEventListener('input', () => {
 
 // Volume control
 volumeBar.addEventListener('input', () => {
-    audio.volume = volumeBar.value;
+    
+audio.volume = volumeBar.value;
+    volumeBar.style.setProperty('--vol', `${volumeBar.value * 100}%`);
+
 });
 
 // Next Song
@@ -506,6 +543,135 @@ repeatBtn.addEventListener('click', () => {
         repeatBtn.title = 'Repeat';
     }
 });
+
+
+// iTunes Logic
+if(itunesBtn) {
+    itunesBtn.addEventListener('click', () => {
+        itunesModal.style.display = 'flex';
+        setTimeout(() => itunesSearchInput.focus(), 300);
+    });
+}
+if(closeItunes) {
+    closeItunes.addEventListener('click', () => {
+        itunesModal.style.display = 'none';
+    });
+}
+if(itunesModal) {
+    itunesModal.addEventListener('click', (e) => {
+        if (e.target === itunesModal) itunesModal.style.display = 'none';
+    });
+}
+
+let searchTimeout;
+if(itunesSearchInput) {
+    itunesSearchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        const query = e.target.value.trim();
+        if(query.length < 2) {
+            itunesList.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Search for a song to hear a 30-second high-quality preview.</div>';
+            return;
+        }
+        
+        itunesList.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">Searching...</div>';
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&limit=15&media=music`)
+                .then(res => res.json())
+                .then(data => {
+                    itunesList.innerHTML = '';
+                    if(data.results.length === 0) {
+                        itunesList.innerHTML = '<div style="text-align: center; color: #888; padding: 20px;">No results found.</div>';
+                        return;
+                    }
+                    
+                    data.results.forEach((track, idx) => {
+                        const li = document.createElement('li');
+                        li.innerHTML = `
+                            <img src="${track.artworkUrl100}" alt="${track.trackName}" class="song-img-small">
+                            <div class="song-info">
+                                <div class="song-title">${track.trackName}</div>
+                                <div class="song-artist">${track.artistName}</div>
+                            </div>
+                            <i class="bi bi-play-circle" style="font-size: 24px; color: #f53192;"></i>
+                        `;
+                        
+                        li.addEventListener('click', () => {
+                            // Create temporary playlist for itunes song
+                            const itunesSong = {
+                                name: track.trackName,
+                                artist: track.artistName,
+                                src: track.previewUrl,
+                                img: track.artworkUrl100,
+                                lyrics: []
+                            };
+                            currentPlaylist = [itunesSong];
+                            currentSong = 0;
+                            loadSong(0);
+                            audio.play();
+                            playBtn.classList.remove('bi-play-fill');
+                            playBtn.classList.add('bi-pause-fill');
+                            songImg.classList.add('playing');
+                            itunesModal.style.display = 'none';
+                            showToast(`Playing 30s preview of ${track.trackName}`);
+                        });
+                        itunesList.appendChild(li);
+                    });
+                })
+                .catch(err => {
+                    itunesList.innerHTML = '<div style="text-align: center; color: #ff4757; padding: 20px;">Error searching iTunes.</div>';
+                });
+        }, 500);
+    });
+}
+
+// Local Upload Logic
+if(uploadLocalBtn) {
+    uploadLocalBtn.addEventListener('click', () => {
+        localAudioUpload.click();
+    });
+}
+
+if(localAudioUpload) {
+    localAudioUpload.addEventListener('change', (e) => {
+        const files = e.target.files;
+        if(files.length === 0) return;
+        
+        // ensure a local playlist exists
+        if(!customPlaylists["Local Uploads"]) {
+            customPlaylists["Local Uploads"] = [];
+            // add to singer select if not there
+            let exists = false;
+            Array.from(singerSelect.options).forEach(opt => {
+                if(opt.value === 'custom') exists = true;
+            });
+            if(!exists) {
+                const opt = document.createElement('option');
+                opt.value = 'custom';
+                opt.textContent = 'My Playlists';
+                singerSelect.appendChild(opt);
+            }
+        }
+        
+        Array.from(files).forEach(file => {
+            const url = URL.createObjectURL(file);
+            const songName = file.name.replace(/\.[^/.]+$/, ""); // remove extension
+            
+            customPlaylists["Local Uploads"].push({
+                name: songName,
+                artist: "Local File",
+                src: url,
+                img: "https://images.unsplash.com/photo-1614613535308-eb5fbd3d2c17?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60", // default music bg
+                lyrics: []
+            });
+        });
+        
+        localStorage.setItem('customPlaylists', JSON.stringify(customPlaylists));
+        renderCustomPlaylists();
+        showToast(`${files.length} song(s) added to Local Uploads!`);
+        localAudioUpload.value = ''; // reset
+    });
+}
 
 // Playlist Modal
 playlistBtn.addEventListener('click', () => {
@@ -658,7 +824,7 @@ function renderCustomPlaylists() {
                 customPlaylistModal.style.display = 'none';
                 playlistModal.style.display = 'none';
             } else {
-                alert('This playlist is empty!');
+                showToast('This playlist is empty!');
             }
         });
 
@@ -672,9 +838,9 @@ function renderCustomPlaylists() {
                 customPlaylists[playlistName] = playlist;
                 localStorage.setItem('customPlaylists', JSON.stringify(customPlaylists));
                 renderCustomPlaylists();
-                alert(`"${currentSongData.name}" added to "${playlistName}"`);
+                showToast(`"${currentSongData.name}" added to "${playlistName}"`);
             } else {
-                alert(`"${currentSongData.name}" is already in "${playlistName}"`);
+                showToast(`"${currentSongData.name}" is already in "${playlistName}"`);
             }
         });
 
@@ -702,10 +868,10 @@ createPlaylistBtn.addEventListener('click', () => {
             newPlaylistName.value = '';
             renderCustomPlaylists();
         } else {
-            alert('A playlist with this name already exists!');
+            showToast('A playlist with this name already exists!');
         }
     } else {
-        alert('Please enter a playlist name!');
+        showToast('Please enter a playlist name!');
     }
 });
 
@@ -757,12 +923,10 @@ singerSelect.addEventListener('change', function () {
 
 // Back/Menu Buttons
 backBtn.addEventListener('click', () => {
-    alert('Back button clicked! (You can add navigation here)');
+    showToast('Back button clicked! (You can add navigation here)');
 });
 
-menuBtn.addEventListener('click', () => {
-    alert('Menu button clicked! (You can add more menu features here)');
-});
+
 
 // Keyboard shortcuts
 document.addEventListener('keydown', (e) => {
@@ -775,10 +939,10 @@ document.addEventListener('keydown', (e) => {
         prevSong();
     } else if (e.code === 'ArrowUp') {
         audio.volume = Math.min(1, audio.volume + 0.1);
-        volumeBar.value = audio.volume;
+        volumeBar.value = audio.volume; volumeBar.style.setProperty('--vol', `${audio.volume * 100}%`);
     } else if (e.code === 'ArrowDown') {
         audio.volume = Math.max(0, audio.volume - 0.1);
-        volumeBar.value = audio.volume;
+        volumeBar.value = audio.volume; volumeBar.style.setProperty('--vol', `${audio.volume * 100}%`);
     } else if (e.code === 'Escape') {
         // Close modals with Escape key
         if (playlistModal.style.display === 'flex') {
@@ -840,7 +1004,7 @@ favoritesBtn.addEventListener('click', () => {
         renderPlaylist();
         playlistModal.style.display = 'flex';
     } else {
-        alert('You have no favorite songs yet!');
+        showToast('You have no favorite songs yet!');
     }
 });
 
@@ -869,7 +1033,7 @@ setCustomTimer.addEventListener('click', () => {
         setSleepTimer(minutes);
         timerModal.style.display = 'none';
     } else {
-        alert('Please enter a value between 1 and 180 minutes.');
+        showToast('Please enter a value between 1 and 180 minutes.');
     }
 });
 
@@ -882,7 +1046,7 @@ startTimerBtn.addEventListener('click', () => {
                 setSleepTimer(minutes);
                 timerModal.style.display = 'none';
             } else {
-                alert('Please enter a value between 1 and 180 minutes.');
+                showToast('Please enter a value between 1 and 180 minutes.');
             }
         } else {
             const minutes = parseInt(activeOption.dataset.minutes);
@@ -926,7 +1090,7 @@ function checkSleepTimer() {
         if (now >= timerEndTime) {
             audio.pause();
             clearSleepTimer();
-            alert('Sleep timer ended. Music has been paused.');
+            showToast('Sleep timer ended. Music has been paused.');
         } else {
             updateTimerDisplay();
         }
@@ -950,3 +1114,179 @@ singerSelect.value = "arijit";
 loadSong(currentSong);
 renderPlaylist();
 renderCustomPlaylists();
+
+// --- Advanced Menu Features ---
+
+// Elements
+const menuDropdown = document.getElementById('menu-dropdown');
+const menuEq = document.getElementById('menu-eq');
+const menuTheme = document.getElementById('menu-theme');
+const menuShare = document.getElementById('menu-share');
+
+const eqModal = document.getElementById('eq-modal');
+const closeEq = document.getElementById('close-eq');
+const themeModal = document.getElementById('theme-modal');
+const closeTheme = document.getElementById('close-theme');
+const themeSwatches = document.querySelectorAll('.theme-swatch');
+
+// Dropdown Toggle
+if(menuBtn) {
+    menuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isVisible = menuDropdown.style.display === 'flex';
+        menuDropdown.style.display = isVisible ? 'none' : 'flex';
+    });
+}
+document.addEventListener('click', (e) => {
+    if(menuDropdown && e.target !== menuBtn && !menuBtn.contains(e.target)) {
+        menuDropdown.style.display = 'none';
+    }
+});
+
+// Modals Toggle
+if(menuEq) {
+    menuEq.addEventListener('click', () => {
+        eqModal.style.display = 'flex';
+        menuDropdown.style.display = 'none';
+    });
+}
+if(closeEq) {
+    closeEq.addEventListener('click', () => {
+        eqModal.style.display = 'none';
+    });
+}
+if(menuTheme) {
+    menuTheme.addEventListener('click', () => {
+        themeModal.style.display = 'flex';
+        menuDropdown.style.display = 'none';
+    });
+}
+if(closeTheme) {
+    closeTheme.addEventListener('click', () => {
+        themeModal.style.display = 'none';
+    });
+}
+if(eqModal) {
+    eqModal.addEventListener('click', (e) => {
+        if(e.target === eqModal) eqModal.style.display = 'none';
+    });
+}
+if(themeModal) {
+    themeModal.addEventListener('click', (e) => {
+        if(e.target === themeModal) themeModal.style.display = 'none';
+    });
+}
+
+// Theme Logic
+themeSwatches.forEach(swatch => {
+    swatch.addEventListener('click', () => {
+        themeSwatches.forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const color = swatch.getAttribute('data-color');
+        const rgb = swatch.getAttribute('data-rgb');
+        document.documentElement.style.setProperty('--accent-color', color);
+        document.documentElement.style.setProperty('--accent-rgb', rgb);
+    });
+});
+
+// Share Logic
+if(menuShare) {
+    menuShare.addEventListener('click', () => {
+        menuDropdown.style.display = 'none';
+        const current = currentPlaylist[currentSong];
+        const textToShare = `Listening to ${current.name} by ${current.artist} on Karya Music!`;
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(textToShare).then(() => {
+                showToast('Song info copied to clipboard! 📋');
+            }).catch(() => {
+                showToast('Failed to copy.');
+            });
+        } else {
+            showToast('Share: ' + textToShare);
+        }
+    });
+}
+
+// Equalizer Logic (Web Audio API)
+let audioCtx;
+let audioSource;
+let bassFilter, midFilter, trebleFilter;
+
+function initEQ() {
+    if(audioCtx) return; // already initialized
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AudioContext();
+        audioSource = audioCtx.createMediaElementSource(audio);
+        
+        bassFilter = audioCtx.createBiquadFilter();
+        bassFilter.type = "lowshelf";
+        bassFilter.frequency.value = 200;
+        
+        midFilter = audioCtx.createBiquadFilter();
+        midFilter.type = "peaking";
+        midFilter.frequency.value = 1000;
+        midFilter.Q.value = 1;
+        
+        trebleFilter = audioCtx.createBiquadFilter();
+        trebleFilter.type = "highshelf";
+        trebleFilter.frequency.value = 3000;
+        
+        // Connect nodes
+        audioSource.connect(bassFilter);
+        bassFilter.connect(midFilter);
+        midFilter.connect(trebleFilter);
+        trebleFilter.connect(audioCtx.destination);
+    } catch (e) {
+        console.error("Audio Context initialization failed:", e);
+    }
+}
+
+// Ensure audio context is started after user interaction
+document.addEventListener('click', () => {
+    if(audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}, {once: true});
+audio.addEventListener('play', () => {
+    initEQ();
+    if(audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+});
+// Need to set crossOrigin to anonymous for the audio tag so EQ can process external URLs if CORS allows
+audio.crossOrigin = "anonymous";
+
+// EQ Sliders
+const eqBass = document.getElementById('eq-bass');
+const eqMid = document.getElementById('eq-mid');
+const eqTreble = document.getElementById('eq-treble');
+const valBass = document.getElementById('val-bass');
+const valMid = document.getElementById('val-mid');
+const valTreble = document.getElementById('val-treble');
+const eqReset = document.getElementById('eq-reset');
+
+if(eqBass) {
+    eqBass.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if(bassFilter) bassFilter.gain.value = val;
+        valBass.textContent = `${val > 0 ? '+' : ''}${val}dB`;
+    });
+    eqMid.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if(midFilter) midFilter.gain.value = val;
+        valMid.textContent = `${val > 0 ? '+' : ''}${val}dB`;
+    });
+    eqTreble.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if(trebleFilter) trebleFilter.gain.value = val;
+        valTreble.textContent = `${val > 0 ? '+' : ''}${val}dB`;
+    });
+    eqReset.addEventListener('click', () => {
+        eqBass.value = 0; eqMid.value = 0; eqTreble.value = 0;
+        valBass.textContent = '0dB'; valMid.textContent = '0dB'; valTreble.textContent = '0dB';
+        if(bassFilter) bassFilter.gain.value = 0;
+        if(midFilter) midFilter.gain.value = 0;
+        if(trebleFilter) trebleFilter.gain.value = 0;
+    });
+}

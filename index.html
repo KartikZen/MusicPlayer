@@ -5,11 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Karya Music</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="style.css">
-    <style>
-
-    </style>
 </head>
 
 <body>
@@ -22,8 +22,15 @@
                 <div class="circle" id="playlist-btn" title="Playlist">
                     <i class="bi bi-music-note-list"></i>
                 </div>
-                <div class="circle" id="menu-btn" title="Menu">
-                    <i class="bi bi-text-indent-left"></i>
+                <div style="position: relative;">
+                    <div class="circle" id="menu-btn" title="Menu">
+                        <i class="bi bi-three-dots-vertical"></i>
+                    </div>
+                    <div class="menu-dropdown" id="menu-dropdown">
+                        <div class="menu-item" id="menu-eq"><i class="bi bi-sliders"></i> Equalizer</div>
+                        <div class="menu-item" id="menu-theme"><i class="bi bi-palette"></i> Themes</div>
+                        <div class="menu-item" id="menu-share"><i class="bi bi-share"></i> Share Song</div>
+                    </div>
                 </div>
             </nav>
             <img src="https://images.unsplash.com/photo-1571330735066-03aaa9429d89?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=60" class="song-img" alt="song image" id="song-img">
@@ -64,6 +71,9 @@
                 </button>
                 <button class="feature-btn" id="custom-playlist-btn">
                     <i class="bi bi-plus-circle"></i> Playlists
+                </button>
+                <button class="feature-btn" id="itunes-search-btn">
+                    <i class="bi bi-globe"></i> Search
                 </button>
                 <button class="feature-btn" id="lyrics-btn">
                     <i class="bi bi-mic"></i> Lyrics
@@ -110,7 +120,83 @@
         </div>
     </div>
 
+    <!-- iTunes Search Modal -->
+    <div class="playlist-modal" id="itunes-modal">
+        <div class="playlist-content">
+            <div class="playlist-header">
+                <h3>Global Search (iTunes)</h3>
+                <span class="close-playlist" id="close-itunes">&times;</span>
+            </div>
+            
+            <div class="playlist-controls">
+                <div class="playlist-search">
+                    <input type="text" id="itunes-search-input" placeholder="Search for any artist or song...">
+                    <i class="bi bi-search"></i>
+                </div>
+            </div>
+            
+            <div class="playlist-list-container">
+                <ul class="playlist-list" id="itunes-list">
+                    <div style="text-align: center; color: #888; padding: 20px;">
+                        Search for a song to hear a 30-second high-quality preview.
+                    </div>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- EQ Modal -->
+    <div class="playlist-modal" id="eq-modal">
+        <div class="playlist-content">
+            <div class="playlist-header">
+                <h3>Audio Equalizer</h3>
+                <span class="close-playlist" id="close-eq">&times;</span>
+            </div>
+            <div style="text-align: center; font-size: 12px; color: #888; margin-bottom: 15px;">
+                Note: EQ mainly works on Local Uploads due to browser CORS rules for external streams.
+            </div>
+            <div class="eq-band">
+                <label>Bass</label>
+                <input type="range" id="eq-bass" min="-20" max="20" value="0">
+                <span class="eq-val" id="val-bass">0dB</span>
+            </div>
+            <div class="eq-band">
+                <label>Mid</label>
+                <input type="range" id="eq-mid" min="-20" max="20" value="0">
+                <span class="eq-val" id="val-mid">0dB</span>
+            </div>
+            <div class="eq-band">
+                <label>Treble</label>
+                <input type="range" id="eq-treble" min="-20" max="20" value="0">
+                <span class="eq-val" id="val-treble">0dB</span>
+            </div>
+            <button id="eq-reset" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); color: white; border: none; border-radius: 8px; cursor: pointer;">Reset EQ</button>
+        </div>
+    </div>
+
+    <!-- Theme Modal -->
+    <div class="playlist-modal" id="theme-modal">
+        <div class="playlist-content">
+            <div class="playlist-header">
+                <h3>Theme Customizer</h3>
+                <span class="close-playlist" id="close-theme">&times;</span>
+            </div>
+            <div class="theme-swatches">
+                <div class="theme-swatch active" style="background: #f53192;" data-color="#f53192" data-rgb="245, 49, 146"></div>
+                <div class="theme-swatch" style="background: #3b82f6;" data-color="#3b82f6" data-rgb="59, 130, 246"></div>
+                <div class="theme-swatch" style="background: #10b981;" data-color="#10b981" data-rgb="16, 185, 129"></div>
+                <div class="theme-swatch" style="background: #8b5cf6;" data-color="#8b5cf6" data-rgb="139, 92, 246"></div>
+                <div class="theme-swatch" style="background: #f59e0b;" data-color="#f59e0b" data-rgb="245, 158, 11"></div>
+                <div class="theme-swatch" style="background: #ef4444;" data-color="#ef4444" data-rgb="239, 68, 68"></div>
+                <div class="theme-swatch" style="background: #06b6d4;" data-color="#06b6d4" data-rgb="6, 182, 212"></div>
+                <div class="theme-swatch" style="background: #ec4899;" data-color="#ec4899" data-rgb="236, 72, 153"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Custom Playlist Modal -->
+
     <div class="custom-playlist-modal" id="custom-playlist-modal">
         <div class="custom-playlist-content">
             <div class="custom-playlist-header">
@@ -121,6 +207,11 @@
             <div class="custom-playlist-controls">
                 <input type="text" id="new-playlist-name" placeholder="New playlist name">
                 <button id="create-playlist-btn">Create</button>
+            </div>
+            
+            <div class="local-upload-controls" style="display: flex; justify-content: center; margin-bottom: 20px;">
+                <input type="file" id="local-audio-upload" accept="audio/mpeg, audio/wav, audio/ogg" style="display: none;" multiple>
+                <button id="upload-local-btn" style="padding: 12px 20px; background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 25px; cursor: pointer; font-weight: bold; width: 100%; transition: all 0.3s;"><i class="bi bi-upload"></i> Upload Local Songs to Playlist</button>
             </div>
             
             <div class="custom-playlist-list-container">
@@ -167,6 +258,14 @@
             </div>
         </div>
     </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <!-- Animated Background -->
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+    <div class="bg-shape shape-3"></div>
 
     <script src="script.js"></script>
 </body>
